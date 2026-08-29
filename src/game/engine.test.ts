@@ -3,11 +3,13 @@ import { CAMPAIGN } from './campaign';
 import {
   canOccupy,
   findWinningPlacements,
+  heightOf,
   parseGrid,
   playLevel,
   simulate,
   stringifyGrid,
   tick,
+  widthOf,
 } from './engine';
 
 function check(name: string, fn: () => void) {
@@ -56,6 +58,13 @@ check('win requires every non-wall cell to be the winner', () => {
 check('leftover no-X is not a win', () => {
   const sim = simulate(parseGrid(`Rr`), 'rock');
   assert.equal(sim.result, 'lose');
+});
+
+check('level 0 is a 4x4 empty grid', () => {
+  const level = CAMPAIGN[0];
+  assert.equal(widthOf(level.grid), 4);
+  assert.equal(heightOf(level.grid), 4);
+  assert.equal(stringifyGrid(level.grid), '....\n....\n....\n....');
 });
 
 check('level 0 any placement wins', () => {

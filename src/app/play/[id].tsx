@@ -8,7 +8,7 @@ import { Piece } from '@/components/Piece';
 import { Body, Display, IconButton, PanelButton, Screen } from '@/components/ui';
 import { useAuth } from '@/context/AuthContext';
 import { CAMPAIGN, getCampaign } from '@/game/campaign';
-import { cloneGrid, playLevel } from '@/game/engine';
+import { cloneGrid, heightOf, playLevel, widthOf } from '@/game/engine';
 import type { Grid, Level, SimResult } from '@/game/types';
 import { getPreviewLevel } from '@/preview';
 import { getBackend } from '@/services';
@@ -149,10 +149,13 @@ export default function PlayScreen() {
           <Board
             grid={grid}
             color={level.color}
-            maxSize={300}
+            maxSize={Math.max(widthOf(grid), heightOf(grid)) <= 5 ? 368 : 300}
             interactive={phase === 'place'}
             onPressCell={tap}
           />
+          <Body center muted>
+            {widthOf(grid)} × {heightOf(grid)}
+          </Body>
         </View>
 
         <Display size={16}>ROCK TAKES SCISSORS</Display>
