@@ -7,7 +7,7 @@ import { Piece } from '@/components/Piece';
 import { Body, Display, IconButton, PanelButton, Screen } from '@/components/ui';
 import { useAuth } from '@/context/AuthContext';
 import { blankGrid, cloneGrid, heightOf, resizeGrid, widthOf } from '@/game/engine';
-import type { Cell, Grid, Level, Rps, Visibility } from '@/game/types';
+import type { Cell, Grid, Level, Rps, Visibility, WinOption } from '@/game/types';
 import { MAX_BOARD, MIN_BOARD } from '@/game/types';
 import { setPreviewLevel } from '@/preview';
 import { getBackend } from '@/services';
@@ -37,11 +37,13 @@ export default function EditorScreen() {
   const [winner, setWinner] = useState<Rps>('rock');
   const [howMany, setHowMany] = useState(1);
   const [color, setColor] = useState(LEVEL_COLORS[0]);
-  const [tool, setTool] = useState<Cell>('rock');
+  const [tool, setTool] = useState<Cell | 'hint'>('rock');
   const [visibility, setVisibility] = useState<Visibility>('draft');
   const [levelId, setLevelId] = useState(id && id !== 'index' ? id : newId());
   const [createdAt, setCreatedAt] = useState(Date.now());
   const [busy, setBusy] = useState(false);
+  const [winOptions, setWinOptions] = useState<WinOption[]>([]);
+  const [index, setIndex] = useState(0);
 
   useEffect(() => {
     if (!id || id === 'index') return;
@@ -56,6 +58,8 @@ export default function EditorScreen() {
       setVisibility(existing.visibility);
       setLevelId(existing.id);
       setCreatedAt(existing.createdAt);
+      setWinOptions(existing.winOptions);
+      setIndex(existing.index);
     })();
   }, [id]);
 
@@ -72,20 +76,36 @@ export default function EditorScreen() {
       visibility,
       createdAt,
       updatedAt: Date.now(),
+      winOptions,
+      index,
     }),
-    [levelId, title, user, grid, winner, howMany, color, visibility, createdAt],
+    [levelId, title, user, grid, winner, howMany, color, visibility, createdAt, winOptions, index],
   );
 
   function paint(row: number, col: number) {
+    if (tool === 'hint') {
+      if (grid[row][col] !== 'empty') return;
+      setWinOptions((current) => {
+        const exists = current.some((spot) => spot.x === col && spot.y === row);
+        return exists
+          ? current.filter((spot) => spot.x !== col || spot.y !== row)
+          : [...current, { x: col, y: row }];
+      });
+      return;
+    }
     const next = cloneGrid(grid);
     next[row][col] = tool;
     setGrid(next);
+    if (tool !== 'empty') {
+      setWinOptions((current) => current.filter((spot) => spot.x !== col || spot.y !== row));
+    }
   }
 
   function changeSize(dh: number, dw: number) {
     const h = Math.min(MAX_BOARD, Math.max(MIN_BOARD, heightOf(grid) + dh));
     const w = Math.min(MAX_BOARD, Math.max(MIN_BOARD, widthOf(grid) + dw));
     setGrid(resizeGrid(grid, h, w));
+    setWinOptions((current) => current.filter((spot) => spot.x < w && spot.y < h));
   }
 
   async function save() {
@@ -124,7 +144,14 @@ export default function EditorScreen() {
         <TextInput value={title} onChangeText={setTitle} style={styles.input} placeholder="TITLE" placeholderTextColor={colors.muted} />
 
         <View style={styles.board}>
-          <Board grid={grid} color={color} maxSize={340} interactive onPressCell={paint} />
+          <Board
+            grid={grid}
+            color={color}
+            maxSize={340}
+            interactive
+            onPressCell={paint}
+            highlights={winOptions.map((spot) => [spot.y, spot.x])}
+          />
         </View>
 
         <View style={styles.split}>
@@ -144,7 +171,14 @@ export default function EditorScreen() {
                   )}
                 </Pressable>
               ))}
+              <Pressable
+                onPress={() => setTool('hint')}
+                style={[styles.tool, tool === 'hint' && styles.toolOn]}
+              >
+                <Text style={styles.toolText}>H</Text>
+              </Pressable>
             </View>
+            <Body muted>{tool === 'hint' ? `${winOptions.length} HINT CELLS` : 'H MARKS WIN OPTIONS'}</Body>
             <Display size={14}>LEVEL COLOR</Display>
             <View style={styles.tools}>
               {LEVEL_COLORS.map((swatch) => (

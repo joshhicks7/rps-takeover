@@ -17,11 +17,18 @@ export type SimResult = 'win' | 'lose' | 'cycle' | 'timeout';
 
 export type Grid = Cell[][];
 
+/** Solution / hint cells in production coordinates: column x, row y. */
+export type WinOption = {
+  x: number;
+  y: number;
+};
+
 export type Level = {
   id: string;
   title: string;
   authorId: string;
   authorUsername: string;
+  /** Row-major engine grid: `grid[y][x]`. Firestore stores column-major `cols[x].types[y]`. */
   grid: Grid;
   winner: Rps;
   howMany: number;
@@ -29,6 +36,8 @@ export type Level = {
   visibility: Visibility;
   createdAt: number;
   updatedAt: number;
+  winOptions: WinOption[];
+  index: number;
 };
 
 export type UserProfile = {

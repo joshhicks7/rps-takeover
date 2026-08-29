@@ -19,6 +19,7 @@
   ],
   "exclude": [
     "node_modules",
-    "src/game/engine.test.ts"
+    "src/game/engine.test.ts",
+    "src/game/schema.test.ts"
   ]
 }

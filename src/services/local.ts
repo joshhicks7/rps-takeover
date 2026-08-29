@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { stringifyGrid, parseGrid } from '@/game/engine';
+import { documentToLevel, levelToDocument } from '@/game/schema';
 import type { Level, UserProfile } from '@/game/types';
 import type { AuthInput, Backend } from '@/services/types';
 
@@ -13,7 +13,7 @@ const KEYS = {
 
 type StoredUser = UserProfile;
 type PasswordBook = Record<string, string>;
-type StoredLevel = Omit<Level, 'grid'> & { grid: string };
+type StoredLevel = ReturnType<typeof levelToDocument> & { id: string };
 
 let authListener: ((user: UserProfile | null) => void) | null = null;
 
@@ -42,11 +42,12 @@ function validUsername(username: string) {
 }
 
 function toLevel(stored: StoredLevel): Level {
-  return { ...stored, grid: parseGrid(stored.grid) };
+  const { id, ...data } = stored;
+  return documentToLevel(id, data as unknown as Record<string, unknown>);
 }
 
 function fromLevel(level: Level): StoredLevel {
-  return { ...level, grid: stringifyGrid(level.grid) };
+  return { id: level.id, ...levelToDocument(level) };
 }
 
 async function emit(user: UserProfile | null) {

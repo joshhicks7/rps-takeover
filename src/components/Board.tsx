@@ -14,12 +14,14 @@ export function Board({
   onPressCell,
   interactive = false,
   highlight,
+  highlights = [],
 }: {
   grid: Grid;
   color: string;
   maxSize?: number;
   onPressCell?: (row: number, col: number) => void;
   highlight?: [number, number] | null;
+  highlights?: Array<[number, number]>;
   interactive?: boolean;
 }) {
   const rows = heightOf(grid);
@@ -35,6 +37,9 @@ export function Board({
   );
   const step = cellSize + GAP;
   const playable = (cell: Cell) => cell !== 'wall';
+  const marked = new Set(
+    [...(highlight ? [highlight] : []), ...highlights].map(([r, c]) => `${r},${c}`),
+  );
 
   return (
     <View style={{ backgroundColor: color, padding: 10, alignSelf: 'center' }}>
@@ -61,7 +66,7 @@ export function Board({
                 />
               );
             }
-            const selected = highlight?.[0] === r && highlight?.[1] === c;
+            const selected = marked.has(`${r},${c}`);
             return (
               <Pressable
                 key={`${r}-${c}`}

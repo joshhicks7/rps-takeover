@@ -25,6 +25,7 @@ export default function PlayScreen() {
   const [spots, setSpots] = useState<Array<[number, number]>>([]);
   const [phase, setPhase] = useState<'place' | 'run' | 'done'>('place');
   const [result, setResult] = useState<SimResult | null>(null);
+  const [showHints, setShowHints] = useState(false);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -61,11 +62,16 @@ export default function PlayScreen() {
 
   function load(next: Level) {
     if (timer.current) clearInterval(timer.current);
-    setLevel(next);
+    setLevel({
+      ...next,
+      winOptions: next.winOptions ?? [],
+      index: next.index ?? 0,
+    });
     setGrid(cloneGrid(next.grid));
     setSpots([]);
     setPhase('place');
     setResult(null);
+    setShowHints(false);
   }
 
   const remaining = (level?.howMany ?? 1) - spots.length;
@@ -152,6 +158,11 @@ export default function PlayScreen() {
             maxSize={Math.max(widthOf(grid), heightOf(grid)) <= 5 ? 368 : 300}
             interactive={phase === 'place'}
             onPressCell={tap}
+            highlights={
+              showHints
+                ? (level.winOptions ?? []).map((spot) => [spot.y, spot.x] as [number, number])
+                : undefined
+            }
           />
           <Body center muted>
             {widthOf(grid)} × {heightOf(grid)}
@@ -194,6 +205,14 @@ export default function PlayScreen() {
               />
             ) : null}
           </View>
+        ) : null}
+
+        {phase === 'place' && (level.winOptions ?? []).length > 0 ? (
+          <PanelButton
+            label={showHints ? 'HIDE HINTS' : 'SHOW HINTS'}
+            active={showHints}
+            onPress={() => setShowHints((value) => !value)}
+          />
         ) : null}
 
         {phase === 'place' && spots.length > 0 ? (

@@ -21,7 +21,7 @@ import {
   where,
   type Firestore,
 } from 'firebase/firestore';
-import { parseGrid, stringifyGrid } from '@/game/engine';
+import { documentToLevel, levelToDocument } from '@/game/schema';
 import type { Level, UserProfile } from '@/game/types';
 import type { AuthInput, Backend } from '@/services/types';
 
@@ -75,34 +75,11 @@ function asProfile(uid: string, data: Record<string, unknown>): UserProfile {
 }
 
 function asLevel(id: string, data: Record<string, unknown>): Level {
-  return {
-    id,
-    title: String(data.title ?? 'UNTITLED'),
-    authorId: String(data.authorId ?? ''),
-    authorUsername: String(data.authorUsername ?? ''),
-    grid: parseGrid(String(data.grid ?? '.')),
-    winner: data.winner as Level['winner'],
-    howMany: Number(data.howMany ?? 1),
-    color: String(data.color ?? '#7CFF4A'),
-    visibility: data.visibility as Level['visibility'],
-    createdAt: Number(data.createdAt ?? Date.now()),
-    updatedAt: Number(data.updatedAt ?? Date.now()),
-  };
+  return documentToLevel(id, data);
 }
 
 function levelDoc(level: Level) {
-  return {
-    title: level.title,
-    authorId: level.authorId,
-    authorUsername: level.authorUsername,
-    grid: stringifyGrid(level.grid),
-    winner: level.winner,
-    howMany: level.howMany,
-    color: level.color,
-    visibility: level.visibility,
-    createdAt: level.createdAt,
-    updatedAt: level.updatedAt,
-  };
+  return levelToDocument(level);
 }
 
 async function profileFromUid(uid: string): Promise<UserProfile | null> {

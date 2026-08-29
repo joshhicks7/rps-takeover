@@ -1,4 +1,5 @@
 import { parseGrid } from './engine';
+import { gridToMap, mapToGrid } from './schema';
 import type { Level, Rps } from './types';
 
 export type CampaignLevel = Omit<Level, 'authorId' | 'authorUsername' | 'visibility' | 'createdAt' | 'updatedAt'> & {
@@ -14,13 +15,17 @@ function campaign(
   ascii: string,
   blurb: string,
 ): CampaignLevel {
+  // Author in ASCII, then round-trip through the same 0–7 column-major types as Firestore.
+  const grid = mapToGrid(gridToMap(parseGrid(ascii)));
   return {
     id,
     title,
     winner,
     howMany,
     color,
-    grid: parseGrid(ascii),
+    grid,
+    winOptions: [],
+    index: Number(id.replace(/\D/g, '')) || 0,
     blurb,
   };
 }
